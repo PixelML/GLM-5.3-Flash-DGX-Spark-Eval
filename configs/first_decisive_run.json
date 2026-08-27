@@ -1,0 +1,64 @@
+{
+  "run_id": "first_decisive_run",
+  "title": "GLM-5.3-Flash NVFP4 routed-expert checkpoint vs streamed BF16 reference",
+  "qbench_rev": "0c49587a7c235e6303a6bbedc8b665272ad3a2ea",
+  "token_budget": 512,
+  "noise_floor": true,
+  "device": 0,
+  "rows_dir": "data/fidelity_rows",
+  "reference": {
+    "label": "BF16 reference",
+    "engine": "transformers",
+    "hf_id": "zai-org/GLM-5.3-Flash",
+    "local_dir": null,
+    "env_override": "BASE_MODEL_DIR",
+    "options": {
+      "streaming": true,
+      "trust_remote_code": true
+    },
+    "note": "Streamed BF16 source reference. Local checkpoint path is supplied on Apollo via BASE_MODEL_DIR."
+  },
+  "candidate": {
+    "label": "NVFP4 candidate",
+    "engine": "transformers",
+    "hf_id": "LibertAIDAI/GLM-5.3-Flash-NVFP4",
+    "local_dir": null,
+    "env_override": "QUANT_MODEL_DIR",
+    "options": {
+      "streaming": true,
+      "trust_remote_code": true
+    },
+    "note": "Candidate checkpoint: ~97% of params are NVFP4 routed experts, remainder BF16. Local path via QUANT_MODEL_DIR."
+  },
+  "trace_provenance": {
+    "method": "self-sampled via OpenAI-compatible endpoint",
+    "endpoint_env": "TRACE_ENDPOINT",
+    "model_env": "TRACE_MODEL",
+    "tokenizer_env": "BASE_MODEL_DIR",
+    "sampling_params": {
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "max_tokens": 512,
+      "seed": 1730
+    }
+  },
+  "metrics": [
+    "kld_median",
+    "kld_p90",
+    "kld_high_confidence",
+    "excess_kld_over_noise_floor",
+    "ppl_delta",
+    "stored_bpw",
+    "model_bytes"
+  ],
+  "expected_outputs": {
+    "per_token_kld_spread": "qbench kld / kld_p10 / kld_p25 / kld_p75 / kld_p90 per model + plot_kld_spread",
+    "confidence_buckets": "qbench kld_buckets (5 reference-confidence buckets)",
+    "ppl_delta": "candidate ppl / reference ppl, derived from qbench output.results JSON",
+    "stored_bpw": "qbench bpw_layer and bpw_head (true stored bits-per-weight)",
+    "model_bytes": "qbench vram_gb * 2^30 (layer + head stored bytes)",
+    "raw_results_json": "results/runs/first_decisive_run/qb_results.json"
+  },
+  "estimate_minutes": [60, 180],
+  "output_dir": "results/runs/first_decisive_run"
+}

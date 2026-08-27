@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sparkquant.local/schemas/fidelity_result.schema.json",
+  "title": "SparkQuant-Lab fidelity run result",
+  "description": "One completed fidelity comparison run (quantized candidate vs BF16 reference) produced by the qbench harness.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "created_utc",
+    "git_rev",
+    "qbench_rev",
+    "models",
+    "rows_used",
+    "metrics",
+    "raw_output_path"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "description": "Unique identifier for this run."
+    },
+    "created_utc": {
+      "type": "string",
+      "description": "ISO-8601 UTC timestamp of the run."
+    },
+    "git_rev": {
+      "type": "string",
+      "description": "Git revision of the SparkQuant-Lab repo at run time."
+    },
+    "qbench_rev": {
+      "type": "string",
+      "description": "exllamav3 revision whose qbench.py was used, unchanged."
+    },
+    "models": {
+      "type": "object",
+      "required": ["reference", "candidate"],
+      "properties": {
+        "reference": { "$ref": "#/$defs/model_ref" },
+        "candidate": { "$ref": "#/$defs/model_ref" }
+      }
+    },
+    "rows_used": {
+      "type": "array",
+      "description": "IDs of the fidelity rows included in this run.",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "metrics": {
+      "type": "object",
+      "required": [
+        "kld_median",
+        "kld_p90",
+        "kld_high_confidence",
+        "excess_kld_over_noise_floor",
+        "ppl_delta",
+        "stored_bpw",
+        "model_bytes"
+      ],
+      "properties": {
+        "kld_median": {
+          "type": ["number", "null"],
+          "description": "Median per-token KLD, candidate vs reference."
+        },
+        "kld_p90": {
+          "type": ["number", "null"],
+          "description": "90th percentile per-token KLD, candidate vs reference."
+        },
+        "kld_high_confidence": {
+          "type": ["number", "null"],
+          "description": "Mean KLD over the highest reference-confidence bucket."
+        },
+        "excess_kld_over_noise_floor": {
+          "type": ["number", "null"],
+          "description": "Candidate KLD minus the BF16 self-noise floor KLD (null when noise floor disabled)."
+        },
+        "ppl_delta": {
+          "type": ["number", "null"],
+          "description": "Ratio of candidate ppl to reference ppl."
+        },
+        "stored_bpw": {
+          "type": ["number", "null"],
+          "description": "True stored bits-per-weight (qbench bpw_layer)."
+        },
+        "model_bytes": {
+          "type": ["number", "null"],
+          "description": "Total stored model bytes (layer + head), derived from qbench vram_gb * 2^30."
+        }
+      }
+    },
+    "raw_output_path": {
+      "type": "string",
+      "description": "Path to the raw qbench results JSON this record summarizes."
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "model_ref": {
+      "type": "object",
+      "required": ["label", "engine", "source"],
+      "properties": {
+        "label": { "type": "string" },
+        "engine": { "type": "string" },
+        "source": { "type": "string" },
+        "hf_id": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

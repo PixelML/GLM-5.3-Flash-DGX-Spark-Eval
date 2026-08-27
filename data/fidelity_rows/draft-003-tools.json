@@ -1,0 +1,7 @@
+{
+  "id": "draft-003-tools",
+  "domain": "tools",
+  "status": "DRAFT - pending Sean's curation",
+  "note": "Phase 0 scaffolding row; not a final evaluation set.",
+  "prompt": "You are an assistant with access to the following tools. Use them when needed and do not answer from memory when a lookup is required.\n\nTool: get_weather(location: str, days: int) -> returns current conditions plus a per-day forecast (high_c, low_c, precip_mm).\nTool: get_air_quality(location: str) -> returns aqi and pm25.\n\nThe user says: \"I'm flying to Bergen, Norway on Thursday for a four-day hiking trip. I have mild asthma. Tell me whether to pack for rain, which of the four days looks best for the longest high-elevation hike, and whether the air quality is a concern.\"\n\nCall the tools you need, then synthesize a single answer that cites the retrieved values. If a tool returns nothing useful, say so explicitly rather than inventing data."
+}

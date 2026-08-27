@@ -1,0 +1,7 @@
+{
+  "id": "draft-004-long-context",
+  "domain": "long-context",
+  "status": "DRAFT - pending Sean's curation",
+  "note": "Phase 0 scaffolding row; not a final evaluation set.",
+  "prompt": "The following excerpt is the opening of a fictional incident report. Read it carefully and answer the question at the end, quoting the specific lines that justify your answer.\n\nEXCERPT\nAt 03:12 on the night of the 14th, the duty engineer for sector nine logged a pressure drop across valve V-114 that persisted for forty minutes before recovering on its own. The overnight shift lead, who had been on the floor since 22:00, noted the anomaly in the handover log but did not escalate it because the automated monitoring system had not raised an alarm. At 04:05 a second, smaller drop occurred at valve V-119, this time accompanied by a faint vibration reported by the conveyor operator on line two. That operator, new to the shift, filed a maintenance ticket but attached it to the wrong asset number. The morning crew arrived at 06:00 and found the handover log had been overwritten by a routine backup job that ran at 05:45, erasing the 03:12 entry. At 07:30 the pressure system went into emergency shutdown.\n\nQUESTION\nWhich two valves showed anomalies, in what order, and what were the three distinct reasons the 03:12 event was not acted on before the 07:30 shutdown? For each reason, cite the sentence that establishes it."
+}

@@ -1,0 +1,16 @@
+# Third-party checkouts fetched by bootstrap.sh (exllamav3, later glm-simple-evals)
+third_party/
+
+# Run artifacts (qbench projects, traces, logit caches, plots, results JSON)
+results/runs/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Model weights / large binaries — NEVER store these in git or in this shared tree
+*.pt
+*.safetensors
+*.bin
+*.gguf

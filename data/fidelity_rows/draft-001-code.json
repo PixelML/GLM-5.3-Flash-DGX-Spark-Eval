@@ -1,0 +1,7 @@
+{
+  "id": "draft-001-code",
+  "domain": "code",
+  "status": "DRAFT - pending Sean's curation",
+  "note": "Phase 0 scaffolding row; not a final evaluation set.",
+  "prompt": "You are reviewing a pull request for a distributed job queue. The worker loop below processes jobs and, on success, deletes the job; on failure it retries with exponential backoff, and after 3 failures it moves the job to a dead-letter list. Identify the concurrency and correctness bugs (e.g. lost updates, double processing, crash windows), then write a corrected version.\n\nPython:\n\nimport time, threading\n\nclass Job:\n    def __init__(self, id, payload, attempts=0):\n        self.id = id\n        self.payload = payload\n        self.attempts = attempts\n\njobs = []\ndead = []\nlock = threading.Lock()\n\ndef process(job):\n    # pretend this calls a remote service\n    time.sleep(0.01)\n    return job.id % 5 != 0\n\ndef worker():\n    while True:\n        for job in jobs:\n            if process(job):\n                jobs.remove(job)\n            else:\n                job.attempts += 1\n                if job.attempts >= 3:\n                    dead.append(job)\n                    jobs.remove(job)\n        time.sleep(0.1)\n\nExplain each bug, then provide a corrected implementation that is safe for multiple worker threads, preserves at-least-once semantics, and does not busy-wait."
+}

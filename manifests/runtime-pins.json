@@ -1,0 +1,22 @@
+{
+  "$comment": "Single source of truth for pinned revisions. Change pins ONLY here (and in the matching configs), then rerun tests/test_repo_integrity.py.",
+  "exllamav3": {
+    "repo": "https://github.com/turboderp-org/exllamav3.git",
+    "rev": "0c49587a7c235e6303a6bbedc8b665272ad3a2ea",
+    "role": "eval harness (qbench). Used UNCHANGED in phase 0; fork only in a later phase."
+  },
+  "glm_simple_evals": {
+    "repo": "https://github.com/zai-org/glm-simple-evals.git",
+    "rev": "b67cb0bf655f8e08c19b1811a1d3c51e3bfea096",
+    "role": "capability evals. LATER PHASE - not cloned by bootstrap.sh in phase 0."
+  },
+  "python": "3.12",
+  "torch": {
+    "version": null,
+    "status": "resolve_on_apollo"
+  },
+  "cuda": {
+    "version": null,
+    "status": "resolve_on_apollo"
+  }
+}

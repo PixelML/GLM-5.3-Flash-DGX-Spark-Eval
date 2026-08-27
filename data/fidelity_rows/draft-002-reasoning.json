@@ -1,0 +1,7 @@
+{
+  "id": "draft-002-reasoning",
+  "domain": "reasoning",
+  "status": "DRAFT - pending Sean's curation",
+  "note": "Phase 0 scaffolding row; not a final evaluation set.",
+  "prompt": "Four people need to cross a river at night using a boat that can carry at most two people at a time. Each crossing takes the time of the slower person in the boat, and every crossing must include at least one person to row back. Their individual crossing times are 1, 2, 5, and 10 minutes. The boat cannot be sent back empty and there is no other way across.\n\nFind the minimum total time to get everyone across, and give a rigorous argument that no strategy can do better. Then answer: if the times were instead 1, 4, 5, and 10 minutes, which person (or pair) becomes the bottleneck in a different way, and what does the optimal schedule look like then? Show your reasoning step by step and state any assumptions you make about what counts as a valid crossing."
+}
