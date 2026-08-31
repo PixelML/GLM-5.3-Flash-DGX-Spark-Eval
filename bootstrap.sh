@@ -3,7 +3,7 @@
 # bootstrap.sh — fetch the pinned third-party eval harness (exllamav3) into
 # third_party/. Idempotent: safe to run repeatedly.
 #
-# This script NEVER downloads model weights. Weight fetching is an Apollo-side,
+# This script NEVER downloads model weights. Weight fetching is an node-side,
 # out-of-band step; this repo only ever references checkpoints by env var.
 #
 set -euo pipefail
@@ -17,7 +17,7 @@ EXL3_DIR="third_party/exllamav3"
 
 # ---- disk free check (informational, plus a weight-download guard) ----------------
 disk_free_gb() {
-  # GNU df; this script targets Linux nodes (agent-sandbox / Apollo), not macOS.
+  # GNU df; this script targets Linux nodes (Linux nodes), not macOS.
   df -BG --output=avail "${1:-.}" | tail -n 1 | tr -dc '0-9'
 }
 free_gb="$(disk_free_gb .)"
@@ -51,13 +51,30 @@ else
   git -C "$EXL3_DIR" checkout "$EXL3_REV"
 fi
 
+# ---- arm64 build patch (aarch64 DGX Spark builds) ----------------------------------
+# exllamav3 @ 0c49587a does not compile on aarch64: five x86-only CPU sources
+# (avx2_target.cpp, avx512_target.cpp, parallel/all_reduce_cpu_avx{2,512}.cpp,
+# cpu/moe_mul1.cpp) plus two __builtin_ia32_pause spin loops. The patch script
+# stubs exactly those (attribution: adapted from MiaAI-Lab's proven arm64 stub,
+# see the script docstring); all CUDA kernels and qbench remain unchanged. The
+# CPU-offload paths it disables are never used by qbench's single-GPU CUDA flow.
+# Remove when upstream merges an equivalent aarch64 port.
+if [[ "$(uname -m)" == "aarch64" ]]; then
+  if [[ ! -f "patches/patch_exl3_ext_aarch64.py" ]]; then
+    echo "ERROR: aarch64 host but patches/patch_exl3_ext_aarch64.py is missing; refusing to continue with an unpatched, unbuildable extension." >&2
+    exit 1
+  fi
+  python3 "patches/patch_exl3_ext_aarch64.py" "$EXL3_DIR/exllamav3/exllamav3_ext"
+  echo "Applied aarch64 build patch to exllamav3."
+fi
+
 echo
 echo "Bootstrap complete. exllamav3 is at $(git -C "$EXL3_DIR" rev-parse HEAD)."
 echo
 echo "Next steps:"
 echo "  1. python3 -m pytest tests/ -q                 # offline integrity checks"
-echo "  2. Copy this repo to Apollo (code+configs only; NEVER weights via this shared tree)."
-echo "  3. On Apollo:"
+echo "  2. Copy this repo to the node (code+configs only; NEVER weights via this shared tree)."
+echo "  3. On the DGX Spark node:"
 echo "       DRY_RUN=1 ./scripts/run_fidelity_smoke.sh   # preview the qbench command"
 echo "       BASE_MODEL_DIR=/path/to/zai-org/GLM-5.3-Flash \\"
 echo "       QUANT_MODEL_DIR=/path/to/LibertAIDAI/GLM-5.3-Flash-NVFP4 \\"

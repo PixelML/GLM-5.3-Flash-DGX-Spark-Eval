@@ -7,12 +7,15 @@ original-model intelligence while keeping usable speed, context, and stability?
 - **Validation model:** Qwen3.8-Flash-Next (later phase)
 - **First experiment:** the current NVFP4 routed-expert checkpoint
   (`LibertAIDAI/GLM-5.3-Flash-NVFP4`, ~97% of params NVFP4 routed experts, rest BF16)
-  vs a streamed BF16 reference (`zai-org/GLM-5.3-Flash`), measured with the **upstream,
-  unmodified** exllamav3 `qbench` harness.
+  vs the official streamed FP8 (e4m3 dynamic) reference (`zai-org/GLM-5.3-Flash`, rev
+  `84c6a6aa…`; its 62 safetensors weight shards are byte-identical to `04c4e9e9…`,
+  though `chat_template.jinja` differs), measured with the **upstream, unmodified**
+  exllamav3 `qbench` harness (see Provenance below: on aarch64 the pinned extension
+  sources are rewritten by our adapted patch before building).
 
 No benchmark numbers here are real yet. This repo is Phase 0 scaffolding: the configs,
 draft data, and wiring to run the first decisive comparison. Numbers get filled in only
-after the run completes on Apollo.
+after the run completes on the DGX Spark node.
 
 ## Repo layout
 
@@ -39,10 +42,11 @@ results/runs/                    git-ignored; qbench projects, traces, caches, r
 ./bootstrap.sh
 
 # 2. offline integrity checks (all JSON parses, pins match, rows valid, scripts executable)
+pip install -r requirements-test.txt   # pinned test deps
 python3 -m pytest tests/ -q
 
-# 3. copy this repo to Apollo (code + configs only — never weights through the shared tree)
-#    then on Apollo:
+# 3. copy this repo to the node (code + configs only — never weights through the shared tree)
+#    then on the DGX Spark node:
 BASE_MODEL_DIR=/path/to/zai-org/GLM-5.3-Flash \
 QUANT_MODEL_DIR=/path/to/LibertAIDAI/GLM-5.3-Flash-NVFP4 \
 TRACE_ENDPOINT=http://localhost:30000/v1 \
@@ -54,21 +58,38 @@ TRACE_MODEL=LibertAIDAI/GLM-5.3-Flash-NVFP4 \
 DRY_RUN=1 ./scripts/run_fidelity_smoke.sh
 ```
 
-`bootstrap.sh` only clones `exllamav3` into `third_party/exllamav3` at the pinned rev
-(see `manifests/runtime-pins.json`). It never downloads model weights; weight fetching is
-an Apollo-side step outside this repo.
+`bootstrap.sh` clones `exllamav3` into `third_party/exllamav3` at the pinned rev
+(see `manifests/runtime-pins.json`) and, on aarch64 hosts, rewrites five x86-only
+extension sources plus two spin-loop intrinsics via `patches/patch_exl3_ext_aarch64.py`
+(adapted from MiaAI-Lab's MIT stub; see `THIRD-PARTY-NOTICES.md`) so the extension
+builds on GB10. The upstream Python/qbench sources are unchanged. It never downloads
+model weights; weight fetching is a node-side step outside this repo.
 
-## Apollo execution notes
+## Provenance and licenses
 
-- Runs happen on **Apollo** (DGX Spark, arm64, 128 GB unified LPDDR5x). This shared tree
-  holds code + configs only — model checkpoints live on Apollo's local disk, never in git
+- This repository: MIT (`LICENSE`).
+- exllamav3 @ `0c49587a7c235e6303a6bbedc8b665272ad3a2ea` (MIT): fetched at runtime,
+  never committed. On aarch64, `patches/patch_exl3_ext_aarch64.py` rewrites pinned
+  extension sources in-place (five x86-only CPU files stubbed; two `__builtin_ia32_pause`
+  spin loops swapped for `std::this_thread::yield()`). CPU tensor-parallel all-reduce
+  and CPU-MoE offload are disabled (they abort if invoked); single-GPU CUDA kernels
+  and all of `eval/qbench.py` are unchanged.
+- `patches/patch_exl3_ext_aarch64.py`: adapted from MiaAI-Lab commit
+  `688b7ab61d549f0f6450981b1f1afbda16c5142f` (MIT). Full notice preserved in the file
+  and in `THIRD-PARTY-NOTICES.md`.
+- glm-simple-evals @ `b67cb0bf655f8e08c19b1811a1d3c51e3bfea096` (MIT): later phase, not vendored.
+
+## DGX Spark execution notes
+
+- Runs happen on a **DGX Spark node** (arm64, 128 GB unified LPDDR5x). This shared tree
+  holds code + configs only — model checkpoints live on the DGX Spark node's local disk, never in git
   or in this shared mount.
 - Populate `manifests/spark-hardware.json` `measured` block on first boot (nvidia-smi,
   driver/CUDA versions, allocatable VRAM). Treat the advertised GB10 specs as unverified
   until then.
-- exllamav3 must be built on Apollo (its CUDA extensions compile on first import). The
+- exllamav3 must be built on the DGX Spark node (its CUDA extensions compile on first import). The
   pinned `requirements.txt` needs `torch>=2.6.0`; exact torch/CUDA versions are recorded in
-  `manifests/runtime-pins.json` once resolved on Apollo (`resolve_on_apollo`).
+  `manifests/runtime-pins.json` once resolved on the DGX Spark node (`resolve_on_node`).
 - `scripts/run_fidelity_smoke.sh` requires the two checkpoint dirs via
   `BASE_MODEL_DIR` / `QUANT_MODEL_DIR`, and a `test_trace` via `TRACE_FILE` (existing
   trace) or `TRACE_ENDPOINT` + `TRACE_MODEL` (self-sample). Both models use the
@@ -106,8 +127,8 @@ Verified project-file keys (read from `eval/qbench.py`, `eval/qbench/data.py`,
    runtime via an OpenAI-compatible `chat/completions` endpoint, then tokenizes them with
    the reference tokenizer's chat template into a valid `test_trace` before invoking
    `qbench.py` unchanged. `qbench.py` itself is never patched or forked. W4A4 activation
-   noise affects trace selection only, not the KLD reference — the reference is streamed
-   BF16.
+   noise affects trace selection only, not the KLD reference — the reference is the
+   official FP8 (e4m3 dynamic) checkpoint streamed with bf16 compute.
 2. **Model bytes are derived, not emitted.** qbench reports `vram_gb` (and `bpw_layer` /
    `bpw_head`); the schema's `model_bytes` is `vram_gb * 2^30`. `ppl_delta` is likewise
    derived (candidate ppl / reference ppl). Both are documented in
@@ -119,7 +140,7 @@ Verified project-file keys (read from `eval/qbench.py`, `eval/qbench/data.py`,
    under bf16 compute, i.e. it measures NVFP4-A16 weight damage — the first-decisive-run
    question. This also removes dependence on an unverified exllamav3 loader path for the
    HF NVFP4 format. Remaining risk: transformers support for the GLM-5.3 arch + NVFP4
-   dequant path on GB10; verify on first Apollo run. If it can't, that's a fork point, not
+   dequant path on GB10; verify on first node run. If it can't, that's a fork point, not
    something to fake here.
 4. **Draft rows.** `data/fidelity_rows/*` are scaffolding drafts pending Sean's curation;
    token counts are approximate (whitespace). Long-context held-out documents are not yet
@@ -129,8 +150,8 @@ Verified project-file keys (read from `eval/qbench.py`, `eval/qbench/data.py`,
    qbench's logit-divergence metrics don't.
 6. **Perf matrix (later phase).** Speed/context/stability matrix across candidate stacks is
    out of scope for the first decisive run; `eval/perf.py` exists upstream for that later.
-7. **Agentic Apollo set (later phase).** Orchestrating multiple runs / the validation model
-   on Apollo is not wired yet.
+7. **Agentic multi-node set (later phase).** Orchestrating multiple runs / the validation model
+   on the DGX Spark node is not wired yet.
 
 ## Pins
 

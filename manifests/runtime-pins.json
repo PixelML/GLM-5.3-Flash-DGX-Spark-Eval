@@ -10,13 +10,24 @@
     "rev": "b67cb0bf655f8e08c19b1811a1d3c51e3bfea096",
     "role": "capability evals. LATER PHASE - not cloned by bootstrap.sh in phase 0."
   },
-  "python": "3.12",
+  "reference_model": {
+    "hf_id": "zai-org/GLM-5.3-Flash",
+    "rev": "84c6a6aa9497188e15a635ba793b0f95a79b1033",
+    "role": "reference checkpoint (FP8 e4m3 dynamic; bf16 compute via streaming dequant). The 62 safetensors weight shards are byte-identical to rev 04c4e9e95c5da8862dced7e5056455116f83a7e0 (same shard count, total bytes, and quantization_config); the tokenizer chat_template.jinja differs between the two revisions, so scripts/build_self_trace.py must consume BASE_MODEL_DIR at this exact revision.",
+    "chat_template_jinja_sha256": "41cff9af7b3a86c96751b107a8444f245fbda0bd5320b636a5bb1f7f4ba1a5c3"
+  },
+  "candidate_model": {
+    "hf_id": "LibertAIDAI/GLM-5.3-Flash-NVFP4",
+    "rev": "11d73216cd636238e82e1d77fe1042ffab36e7fa",
+    "role": "candidate NVFP4 checkpoint"
+  },
+  "python": "3.12.3",
   "torch": {
-    "version": null,
-    "status": "resolve_on_apollo"
+    "version": "2.13.0+cu130",
+    "status": "verified_on_node"
   },
   "cuda": {
-    "version": null,
-    "status": "resolve_on_apollo"
+    "version": "13.0",
+    "status": "verified_on_node"
   }
 }

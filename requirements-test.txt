@@ -1,0 +1,6 @@
+# Pinned offline test dependencies for SparkQuant-Lab Phase 0.
+# This file exists so reviewers can reproduce the exact test command:
+#   pip install -r requirements-test.txt
+#   python3 -m pytest tests/ -q
+# The test suite is otherwise stdlib-only; this is the only third-party dep.
+pytest==8.3.5

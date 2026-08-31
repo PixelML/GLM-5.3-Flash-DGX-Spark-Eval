@@ -24,6 +24,7 @@ nonzero otherwise (e.g. all rows failed, or <2 rows succeeded with --allow-parti
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -34,6 +35,12 @@ DEFAULT_TIMEOUT = 600
 DEFAULT_SEED = 1730
 DEFAULT_TEMPERATURE = 0.7
 DEFAULT_TOP_P = 0.9
+
+# Must equal manifests/runtime-pins.json reference_model.chat_template_jinja_sha256.
+# build_self_trace refuses to run against a tokenizer directory whose chat template
+# does not match this exact digest, so the wrong local checkout can never silently
+# change the measured trace.
+EXPECTED_CHAT_TEMPLATE_SHA256 = "41cff9af7b3a86c96751b107a8444f245fbda0bd5320b636a5bb1f7f4ba1a5c3"
 
 
 def to_list(ids):
@@ -46,6 +53,30 @@ def to_list(ids):
 def load_tokenizer(tokenizer_dir):
     from transformers import AutoTokenizer
     return AutoTokenizer.from_pretrained(tokenizer_dir, trust_remote_code=True)
+
+
+def verify_chat_template_pin(tokenizer_dir, config):
+    """Fail closed unless the tokenizer dir's chat_template.jinja matches the pinned digest."""
+    manifest_path = Path(__file__).resolve().parent.parent / "manifests" / "runtime-pins.json"
+    with open(manifest_path, "r", encoding="utf8") as f:
+        pins = json.load(f)
+    expected = pins["reference_model"]["chat_template_jinja_sha256"]
+    template_path = Path(tokenizer_dir) / "chat_template.jinja"
+    if not template_path.is_file():
+        sys.exit(
+            f"ERROR: {template_path} not found. The chat template is required to pin "
+            f"the tokenizer/template revision; refusing to sample with an unpinned tokenizer."
+        )
+    actual = hashlib.sha256(template_path.read_bytes()).hexdigest()
+    if actual != expected:
+        sys.exit(
+            f"ERROR: chat_template.jinja digest mismatch.\n"
+            f"       expected (rev 84c6a6aa…): {expected}\n"
+            f"       found:                    {actual}\n"
+            f"       BASE_MODEL_DIR must point at zai-org/GLM-5.3-Flash rev "
+            f"84c6a6aa9497188e15a635ba793b0f95a79b1033. Refusing to build a trace "
+            f"with an unpinned template."
+        )
 
 
 def sample_assistant(endpoint, model, prompt, *, temperature, top_p, max_tokens,
@@ -169,6 +200,7 @@ def main():
         sys.exit(f"ERROR: no fidelity rows found in {rows_dir}.")
 
     tokenizer = load_tokenizer(tokenizer_dir)
+    verify_chat_template_pin(tokenizer_dir, cfg)
     vocab_size = int(getattr(tokenizer, "vocab_size", None) or len(tokenizer))
 
     trace_rows = []

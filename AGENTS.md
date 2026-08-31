@@ -5,13 +5,13 @@ These rules are specific to this repo. They refine, not replace, the shared-tree
 
 ## Routing rule (where work runs)
 
-- **Heavy runs (qbench, model loading, anything touching weights or VRAM) run on Apollo**
+- **Heavy runs (qbench, model loading, anything touching weights or VRAM) run on the DGX Spark node**
   (DGX Spark, arm64, its own GPU). This shared tree holds **code + configs only** — never
   model weights, never logit caches, never run artifacts.
-- This node (agent-sandbox / the shared mount) is for scaffolding, editing, and the offline
-  integrity tests. It has no VRAM and not enough disk for checkpoints; do not attempt to run
-  qbench or download weights here.
-- Checkpoints are copied to Apollo's local disk out-of-band (not via this repo, not via
+- The build/orchestration workstation (shared mount) is for scaffolding, editing, and the
+  offline integrity tests. It has no VRAM and not enough disk for checkpoints; do not
+  attempt to run qbench or download weights here.
+- Checkpoints are copied to the node's local disk out-of-band (not via this repo, not via
   this shared tree). The repo only references them by env var
   (`BASE_MODEL_DIR`, `QUANT_MODEL_DIR`).
 
@@ -21,8 +21,8 @@ These rules are specific to this repo. They refine, not replace, the shared-tree
   `configs/first_decisive_run.json`). Change pins **only** there, then rerun
   `python3 -m pytest tests/ -q` — the tests assert manifests and configs agree with each
   other and with the revs documented in `README.md`.
-- Runtime versions (python/torch/CUDA) are placeholders (`resolve_on_apollo`) until
-  measured on Apollo; fill them in via the manifest, not ad hoc.
+- Runtime versions (python/torch/CUDA) are placeholders (`resolve_on_node`) until
+  measured on the DGX Spark node; fill them in via the manifest, not ad hoc.
 
 ## qbench-unchanged policy
 

@@ -22,6 +22,15 @@ JSON_FILES = [
     REPO_ROOT / "results" / "schema" / "fidelity_result.schema.json",
 ]
 
+RECEIPT_FILES = [
+    REPO_ROOT / "results" / "receipts" / "arm64-exl3-build.json",
+]
+
+LICENSE_FILES = [
+    REPO_ROOT / "LICENSE",
+    REPO_ROOT / "THIRD-PARTY-NOTICES.md",
+]
+
 EXPECTED_DOMAINS = {"code", "reasoning", "tools", "long-context"}
 TOKEN_BUDGET = 512
 
@@ -74,12 +83,22 @@ def test_json_files_parse(path):
 
 def test_runtime_pins_structure():
     pins = load_json(REPO_ROOT / "manifests" / "runtime-pins.json")
-    assert pins["python"] == "3.12"
+    assert pins["python"] == "3.12.3"
     assert pins["exllamav3"]["rev"]
     assert pins["glm_simple_evals"]["rev"]
     for key in ("torch", "cuda"):
-        assert pins[key]["version"] is None
-        assert pins[key]["status"] == "resolve_on_apollo"
+        assert pins[key]["version"], f"{key} version must now be measured, not null"
+        assert pins[key]["status"] == "verified_on_node"
+
+
+def test_model_revision_pins_present_and_full_length():
+    pins = load_json(REPO_ROOT / "manifests" / "runtime-pins.json")
+    for key in ("reference_model", "candidate_model"):
+        entry = pins[key]
+        assert entry["hf_id"], f"{key} missing hf_id"
+        assert re.fullmatch(r"[0-9a-f]{40}", entry["rev"]), (
+            f"{key} rev must be a full 40-char commit SHA, got {entry['rev']!r}"
+        )
 
 
 def test_manifests_match_readme_pinned_revs():
@@ -103,6 +122,31 @@ def test_config_qbench_rev_matches_pins():
     assert cfg["token_budget"] == TOKEN_BUDGET
     assert cfg["noise_floor"] is True
     assert cfg["estimate_minutes"] == [60, 180]
+
+
+def test_config_model_pins_match_manifest():
+    pins = load_json(REPO_ROOT / "manifests" / "runtime-pins.json")
+    cfg = load_json(REPO_ROOT / "configs" / "first_decisive_run.json")
+
+    ref, cand = cfg["reference"], cfg["candidate"]
+    assert ref["hf_id"] == pins["reference_model"]["hf_id"], (
+        "config reference hf_id must equal pins.reference_model.hf_id"
+    )
+    assert ref["revision"] == pins["reference_model"]["rev"], (
+        "config reference revision must equal pins.reference_model.rev"
+    )
+    assert cand["hf_id"] == pins["candidate_model"]["hf_id"], (
+        "config candidate hf_id must equal pins.candidate_model.hf_id"
+    )
+    assert cand["revision"] == pins["candidate_model"]["rev"], (
+        "config candidate revision must equal pins.candidate_model.rev"
+    )
+
+    template_sha = pins["reference_model"]["chat_template_jinja_sha256"]
+    assert re.fullmatch(r"[0-9a-f]{64}", template_sha), (
+        "pins.reference_model.chat_template_jinja_sha256 must be 64 lowercase hex chars, "
+        f"got {template_sha!r}"
+    )
 
 
 def test_exactly_four_fidelity_rows_cover_four_domains():
@@ -184,3 +228,24 @@ def test_gitignore_covers_required_paths():
     text = (REPO_ROOT / ".gitignore").read_text(encoding="utf8")
     for entry in ("third_party/", "results/runs/", "__pycache__", ".pytest_cache", "*.pt", "*.safetensors"):
         assert entry in text, f".gitignore missing entry {entry!r}"
+
+
+def test_receipts_are_valid_json_and_labeled():
+    for path in RECEIPT_FILES:
+        receipt = load_json(path)
+        assert "status" in receipt
+        assert "untested" in receipt
+        # receipts must never claim an unrun benchmark
+        assert "not yet" in receipt["status"] or "PASS" in receipt["status"]
+
+
+def test_license_and_third_party_notices_exist():
+    for path in LICENSE_FILES:
+        assert path.is_file(), f"missing license file: {path}"
+    notices = LICENSE_FILES[1].read_text(encoding="utf8")
+    for needle in (
+        "0c49587a7c235e6303a6bbedc8b665272ad3a2ea",
+        "688b7ab61d549f0f6450981b1f1afbda16c5142f",
+        "Mia's AI Lab",
+    ):
+        assert needle in notices, f"THIRD-PARTY-NOTICES.md missing {needle!r}"

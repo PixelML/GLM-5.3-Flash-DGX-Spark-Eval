@@ -1,13 +1,13 @@
 {
   "run_id": "first_decisive_run",
-  "title": "GLM-5.3-Flash NVFP4 routed-expert checkpoint vs streamed BF16 reference",
+  "title": "GLM-5.3-Flash NVFP4 routed-expert checkpoint vs streamed FP8 reference",
   "qbench_rev": "0c49587a7c235e6303a6bbedc8b665272ad3a2ea",
   "token_budget": 512,
   "noise_floor": true,
   "device": 0,
   "rows_dir": "data/fidelity_rows",
   "reference": {
-    "label": "BF16 reference",
+    "label": "FP8 reference",
     "engine": "transformers",
     "hf_id": "zai-org/GLM-5.3-Flash",
     "local_dir": null,
@@ -16,7 +16,8 @@
       "streaming": true,
       "trust_remote_code": true
     },
-    "note": "Streamed BF16 source reference. Local checkpoint path is supplied on Apollo via BASE_MODEL_DIR."
+"note": "Official FP8 (e4m3 dynamic) checkpoint, streamed with bf16 compute via transformers. The 62 safetensors weight shards are byte-identical to 04c4e9e95c5da8862dced7e5056455116f83a7e0; chat_template.jinja differs, so BASE_MODEL_DIR must stay pinned to 84c6a6aa9497188e15a635ba793b0f95a79b1033 for the self-trace. Local path supplied on the DGX Spark node via BASE_MODEL_DIR.",
+    "revision": "84c6a6aa9497188e15a635ba793b0f95a79b1033"
   },
   "candidate": {
     "label": "NVFP4 candidate",
@@ -28,7 +29,8 @@
       "streaming": true,
       "trust_remote_code": true
     },
-    "note": "Candidate checkpoint: ~97% of params are NVFP4 routed experts, remainder BF16. Local path via QUANT_MODEL_DIR."
+    "note": "Candidate checkpoint: ~97% of params are NVFP4 routed experts, remainder BF16. Local path via QUANT_MODEL_DIR.",
+    "revision": "11d73216cd636238e82e1d77fe1042ffab36e7fa"
   },
   "trace_provenance": {
     "method": "self-sampled via OpenAI-compatible endpoint",
@@ -59,6 +61,9 @@
     "model_bytes": "qbench vram_gb * 2^30 (layer + head stored bytes)",
     "raw_results_json": "results/runs/first_decisive_run/qb_results.json"
   },
-  "estimate_minutes": [60, 180],
+  "estimate_minutes": [
+    60,
+    180
+  ],
   "output_dir": "results/runs/first_decisive_run"
 }
