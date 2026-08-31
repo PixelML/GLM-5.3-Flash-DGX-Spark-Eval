@@ -60,12 +60,12 @@ fi
 # CPU-offload paths it disables are never used by qbench's single-GPU CUDA flow.
 # Remove when upstream merges an equivalent aarch64 port.
 if [[ "$(uname -m)" == "aarch64" ]]; then
-  if [[ -f "patches/patch_exl3_ext_aarch64.py" ]]; then
-    python3 "patches/patch_exl3_ext_aarch64.py" "$EXL3_DIR/exllamav3/exllamav3_ext"
-    echo "Applied aarch64 build patch to exllamav3."
-  else
-    echo "WARNING: aarch64 host but patches/patch_exl3_ext_aarch64.py missing; extension build will likely fail." >&2
+  if [[ ! -f "patches/patch_exl3_ext_aarch64.py" ]]; then
+    echo "ERROR: aarch64 host but patches/patch_exl3_ext_aarch64.py is missing; refusing to continue with an unpatched, unbuildable extension." >&2
+    exit 1
   fi
+  python3 "patches/patch_exl3_ext_aarch64.py" "$EXL3_DIR/exllamav3/exllamav3_ext"
+  echo "Applied aarch64 build patch to exllamav3."
 fi
 
 echo

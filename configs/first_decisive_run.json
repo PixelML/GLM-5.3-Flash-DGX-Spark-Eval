@@ -16,7 +16,7 @@
       "streaming": true,
       "trust_remote_code": true
     },
-    "note": "Official FP8 (e4m3 dynamic) checkpoint, streamed with bf16 compute via transformers. Verified byte-identical to 04c4e9e95c5da8862dced7e5056455116f83a7e0. Local path supplied on the DGX Spark node via BASE_MODEL_DIR.",
+"note": "Official FP8 (e4m3 dynamic) checkpoint, streamed with bf16 compute via transformers. The 62 safetensors weight shards are byte-identical to 04c4e9e95c5da8862dced7e5056455116f83a7e0; chat_template.jinja differs, so BASE_MODEL_DIR must stay pinned to 84c6a6aa9497188e15a635ba793b0f95a79b1033 for the self-trace. Local path supplied on the DGX Spark node via BASE_MODEL_DIR.",
     "revision": "84c6a6aa9497188e15a635ba793b0f95a79b1033"
   },
   "candidate": {

@@ -3,8 +3,8 @@
 
 Adapted for exllamav3 rev 0c49587a (v1.4.4) from the proven arm64 build stub in
 MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks (overlay/patch_exl3_ext_aarch64.py,
-commit 688b7ab61d549f0f6450981b1f1afbda16c5142f, MIT license), which targets the
-older rev c5d9c657 (v0.0.43). At our pinned rev the CPU-MoE GEMM (cpu/moe_mul1.cpp)
+commit 688b7ab61d549f0f6450981b1f1afbda16c5142f, MIT license; full notice below),
+which targets the older rev c5d9c657 (v0.0.43). At our pinned rev the CPU-MoE GEMM (cpu/moe_mul1.cpp)
 and the fused CUDA handoff kernels additionally use x86-only intrinsics
 (immintrin.h, __builtin_cpu_supports, __builtin_ia32_pause), so those two .cu files
 and moe_mul1.cpp are stubbed too. All removed paths are CPU-only optimizations:
@@ -14,10 +14,42 @@ Symbols removed by stubbing stay bound in bindings.cpp / moe_handoff.cu /
 all_reduce_cpu.cu, so this file defines them as no-ops or abort() stubs to keep the
 extension linkable. AVX-family capability probes report false; CPU tensor-parallel
 all-reduce and CPU-MoE dispatch abort if actually invoked on this platform.
+
+Adapted from MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks,
+overlay/patch_exl3_ext_aarch64.py @ 688b7ab61d549f0f6450981b1f1afbda16c5142f.
+Copyright (c) 2026 Mia's AI Lab. MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Full license text: LICENSE and THIRD-PARTY-NOTICES.md in this repository.
 """
 
 import sys
 from pathlib import Path
+
+# sha256 of the two full upstream files at the pinned rev (GitHub blob contents);
+# tests/test_aarch64_patch.py asserts these stay documented so silent upstream
+# drift is detectable.
+PINNED_TARGET_SHA256 = {
+    "cpu/moe_handoff.cu": "a635bb717c5c1fa4ba44d08215cc6b0da8c21faa91499f01bff5308610055acd",
+    "parallel/all_reduce_cpu.cu": "064e7e56206333ef95e42abc2c2cdd55fb564b606ac5155150e8b58755195fe3",
+}
 
 root = Path(sys.argv[1] if len(sys.argv) > 1 else "third_party/exllamav3/exllamav3/exllamav3_ext")
 root = root.resolve()
@@ -127,4 +159,3 @@ if leftovers:
         print(f"WARNING: {pat} still present in {p}", file=sys.stderr)
     sys.exit(1)
 print(f"aarch64 EXL3 x86-target stubs written in {root}")
-

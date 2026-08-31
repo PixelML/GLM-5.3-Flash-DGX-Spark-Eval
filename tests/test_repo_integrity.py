@@ -22,6 +22,15 @@ JSON_FILES = [
     REPO_ROOT / "results" / "schema" / "fidelity_result.schema.json",
 ]
 
+RECEIPT_FILES = [
+    REPO_ROOT / "results" / "receipts" / "arm64-exl3-build.json",
+]
+
+LICENSE_FILES = [
+    REPO_ROOT / "LICENSE",
+    REPO_ROOT / "THIRD-PARTY-NOTICES.md",
+]
+
 EXPECTED_DOMAINS = {"code", "reasoning", "tools", "long-context"}
 TOKEN_BUDGET = 512
 
@@ -194,3 +203,24 @@ def test_gitignore_covers_required_paths():
     text = (REPO_ROOT / ".gitignore").read_text(encoding="utf8")
     for entry in ("third_party/", "results/runs/", "__pycache__", ".pytest_cache", "*.pt", "*.safetensors"):
         assert entry in text, f".gitignore missing entry {entry!r}"
+
+
+def test_receipts_are_valid_json_and_labeled():
+    for path in RECEIPT_FILES:
+        receipt = load_json(path)
+        assert "status" in receipt
+        assert "untested" in receipt
+        # receipts must never claim an unrun benchmark
+        assert "not yet" in receipt["status"] or "PASS" in receipt["status"]
+
+
+def test_license_and_third_party_notices_exist():
+    for path in LICENSE_FILES:
+        assert path.is_file(), f"missing license file: {path}"
+    notices = LICENSE_FILES[1].read_text(encoding="utf8")
+    for needle in (
+        "0c49587a7c235e6303a6bbedc8b665272ad3a2ea",
+        "688b7ab61d549f0f6450981b1f1afbda16c5142f",
+        "Mia's AI Lab",
+    ):
+        assert needle in notices, f"THIRD-PARTY-NOTICES.md missing {needle!r}"

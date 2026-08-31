@@ -1,0 +1,44 @@
+{
+  "receipt_type": "arm64 exllamav3 extension build + import smoke",
+  "date_utc": "2026-08-31",
+  "status": "PASS (build + import); full qbench run not yet executed",
+  "host_class": "DGX Spark node, aarch64 (GB10)",
+  "runtime": {
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130",
+    "cuda": "13.0",
+    "gpu_compute_capability": "12.1 (GB10)",
+    "driver": "580.173.02 (NVIDIA UNIX Open Kernel Module for aarch64)",
+    "note": "nvidia-smi memory query returns N/A on this GB10 platform; driver read from /proc/driver/nvidia/version"
+  },
+  "container": {
+    "base_image_digest": "lmsysorg/sglang@sha256:e6f5482505e7502f791fe4615ad1fbec118cbbd6b44e98f2479b16b98b985ad6",
+    "built_image_id": "sq-exl3-built:arm64 (image id sha256:7cafa31ec85b219463e8dee689a418d2d7f28bb7326c8f9fc5bec52f9a9174b0)",
+    "toolchain": "container default gcc/nvcc; no host toolchain used"
+  },
+  "exllamav3": {
+    "repo": "https://github.com/turboderp-org/exllamav3",
+    "rev": "0c49587a7c235e6303a6bbedc8b665272ad3a2ea",
+    "version": "1.4.4",
+    "patch": "patches/patch_exl3_ext_aarch64.py (adapted from MiaAI-Lab 688b7ab61d549f0f6450981b1f1afbda16c5142f, MIT)",
+    "build_command": "pip wheel . --no-deps -w /wheels (in-container, aarch64)",
+    "artifact": "exllamav3-1.4.4-cp312-cp312-linux_aarch64.whl",
+    "artifact_sha256": "unrecorded (wheel not retained outside the node build container)",
+    "artifact_note": "Rebuild locally with the documented command to verify; import receipt below is from the built container."
+  },
+  "verification": [
+    {"command": "python3 -c 'import exllamav3, exllamav3_ext'", "result": "PASS"},
+    {"command": "python3 -c 'import qbench.engines'", "result": "PASS"},
+    {"command": "DRY_RUN=1 ./scripts/run_fidelity_smoke.sh", "result": "PASS (renders qbench project; no model loaded)"}
+  ],
+  "disabled_paths": {
+    "cpu_tensor_parallel_allreduce": "stubbed; aborts if invoked",
+    "cpu_moe_offload": "stubbed; aborts if invoked",
+    "single_gpu_cuda_kernels": "unchanged from upstream"
+  },
+  "untested": [
+    "any multi-GPU or CPU-offload topology",
+    "full qbench fidelity run",
+    "any model weights (none loaded for this receipt)"
+  ]
+}

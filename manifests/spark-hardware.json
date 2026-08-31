@@ -3,19 +3,19 @@
   "advertised": {
     "gpu": "NVIDIA GB10 (Blackwell SM121-class GPU)",
     "unified_memory": "128 GB LPDDR5x (unified CPU/GPU memory)",
-    "memory_bandwidth": "4 TB/s",
-    "status": "verify_on_first_node_boot"
+    "memory_bandwidth": "273 GB/s (vendor spec; NVIDIA DGX Spark datasheet)",
+    "status": "vendor spec, not measured here"
   },
   "measured": {
-    "status": "unpopulated - fill after first node boot",
-    "nvidia_smi_output": null,
-    "driver_version": null,
-    "cuda_version": null,
+    "status": "populated from node runtime receipt (see results/receipts/arm64-exl3-build.json)",
+    "nvidia_smi_output": "platform query limited on GB10; driver read from /proc/driver/nvidia/version",
+    "driver_version": "580.173.02",
+    "cuda_version": "13.0",
     "gpu_name_reported": null,
     "total_vram_gb": null,
     "torch_cuda_available": null,
-    "torch_version": null,
-    "torch_cuda_version": null,
+    "torch_version": "2.13.0+cu130",
+    "torch_cuda_version": "13.0",
     "notes": "Populate from `nvidia-smi` and `python3 -c 'import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.get_device_name(0))'`."
   },
   "notes": "All advertised numbers are vendor specs, NOT measurements. Treat them as unverified until the measured block is populated on the DGX Spark node."

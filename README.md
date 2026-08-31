@@ -8,8 +8,10 @@ original-model intelligence while keeping usable speed, context, and stability?
 - **First experiment:** the current NVFP4 routed-expert checkpoint
   (`LibertAIDAI/GLM-5.3-Flash-NVFP4`, ~97% of params NVFP4 routed experts, rest BF16)
   vs the official streamed FP8 (e4m3 dynamic) reference (`zai-org/GLM-5.3-Flash`, rev
-  `84c6a6aa…`, byte-identical to `04c4e9e9…`), measured with the **upstream,
-  unmodified** exllamav3 `qbench` harness.
+  `84c6a6aa…`; its 62 safetensors weight shards are byte-identical to `04c4e9e9…`,
+  though `chat_template.jinja` differs), measured with the **upstream, unmodified**
+  exllamav3 `qbench` harness (see Provenance below: on aarch64 the pinned extension
+  sources are rewritten by our adapted patch before building).
 
 No benchmark numbers here are real yet. This repo is Phase 0 scaffolding: the configs,
 draft data, and wiring to run the first decisive comparison. Numbers get filled in only
@@ -55,9 +57,26 @@ TRACE_MODEL=LibertAIDAI/GLM-5.3-Flash-NVFP4 \
 DRY_RUN=1 ./scripts/run_fidelity_smoke.sh
 ```
 
-`bootstrap.sh` only clones `exllamav3` into `third_party/exllamav3` at the pinned rev
-(see `manifests/runtime-pins.json`). It never downloads model weights; weight fetching is
-an node-side step outside this repo.
+`bootstrap.sh` clones `exllamav3` into `third_party/exllamav3` at the pinned rev
+(see `manifests/runtime-pins.json`) and, on aarch64 hosts, rewrites five x86-only
+extension sources plus two spin-loop intrinsics via `patches/patch_exl3_ext_aarch64.py`
+(adapted from MiaAI-Lab's MIT stub; see `THIRD-PARTY-NOTICES.md`) so the extension
+builds on GB10. The upstream Python/qbench sources are unchanged. It never downloads
+model weights; weight fetching is a node-side step outside this repo.
+
+## Provenance and licenses
+
+- This repository: MIT (`LICENSE`).
+- exllamav3 @ `0c49587a7c235e6303a6bbedc8b665272ad3a2ea` (MIT): fetched at runtime,
+  never committed. On aarch64, `patches/patch_exl3_ext_aarch64.py` rewrites pinned
+  extension sources in-place (five x86-only CPU files stubbed; two `__builtin_ia32_pause`
+  spin loops swapped for `std::this_thread::yield()`). CPU tensor-parallel all-reduce
+  and CPU-MoE offload are disabled (they abort if invoked); single-GPU CUDA kernels
+  and all of `eval/qbench.py` are unchanged.
+- `patches/patch_exl3_ext_aarch64.py`: adapted from MiaAI-Lab commit
+  `688b7ab61d549f0f6450981b1f1afbda16c5142f` (MIT). Full notice preserved in the file
+  and in `THIRD-PARTY-NOTICES.md`.
+- glm-simple-evals @ `b67cb0bf655f8e08c19b1811a1d3c51e3bfea096` (MIT): later phase, not vendored.
 
 ## DGX Spark execution notes
 
