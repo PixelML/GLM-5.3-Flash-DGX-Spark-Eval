@@ -51,6 +51,23 @@ else
   git -C "$EXL3_DIR" checkout "$EXL3_REV"
 fi
 
+# ---- arm64 build patch (aarch64 DGX Spark builds) ----------------------------------
+# exllamav3 @ 0c49587a does not compile on aarch64: five x86-only CPU sources
+# (avx2_target.cpp, avx512_target.cpp, parallel/all_reduce_cpu_avx{2,512}.cpp,
+# cpu/moe_mul1.cpp) plus two __builtin_ia32_pause spin loops. The patch script
+# stubs exactly those (attribution: adapted from MiaAI-Lab's proven arm64 stub,
+# see the script docstring); all CUDA kernels and qbench remain unchanged. The
+# CPU-offload paths it disables are never used by qbench's single-GPU CUDA flow.
+# Remove when upstream merges an equivalent aarch64 port.
+if [[ "$(uname -m)" == "aarch64" ]]; then
+  if [[ -f "patches/patch_exl3_ext_aarch64.py" ]]; then
+    python3 "patches/patch_exl3_ext_aarch64.py" "$EXL3_DIR/exllamav3/exllamav3_ext"
+    echo "Applied aarch64 build patch to exllamav3."
+  else
+    echo "WARNING: aarch64 host but patches/patch_exl3_ext_aarch64.py missing; extension build will likely fail." >&2
+  fi
+fi
+
 echo
 echo "Bootstrap complete. exllamav3 is at $(git -C "$EXL3_DIR" rev-parse HEAD)."
 echo
