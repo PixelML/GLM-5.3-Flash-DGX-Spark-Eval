@@ -42,6 +42,7 @@ results/runs/                    git-ignored; qbench projects, traces, caches, r
 ./bootstrap.sh
 
 # 2. offline integrity checks (all JSON parses, pins match, rows valid, scripts executable)
+pip install -r requirements-test.txt   # pinned test deps
 python3 -m pytest tests/ -q
 
 # 3. copy this repo to the node (code + configs only — never weights through the shared tree)

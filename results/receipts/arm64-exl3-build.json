@@ -1,6 +1,7 @@
 {
   "receipt_type": "arm64 exllamav3 extension build + import smoke",
   "date_utc": "2026-08-31",
+  "producing_repo_rev": "PENDING_UNTIL_COMMIT_A",
   "status": "PASS (build + import); full qbench run not yet executed",
   "host_class": "DGX Spark node, aarch64 (GB10)",
   "runtime": {
@@ -14,17 +15,21 @@
   "container": {
     "base_image_digest": "lmsysorg/sglang@sha256:e6f5482505e7502f791fe4615ad1fbec118cbbd6b44e98f2479b16b98b985ad6",
     "built_image_id": "sq-exl3-built:arm64 (image id sha256:7cafa31ec85b219463e8dee689a418d2d7f28bb7326c8f9fc5bec52f9a9174b0)",
-    "toolchain": "container default gcc/nvcc; no host toolchain used"
+    "toolchain": "container default gcc/nvcc; no host toolchain used",
+    "gcc": "13.3.0 (Ubuntu 13.3.0-6ubuntu2~24.04.1)",
+    "nvcc": "release 13.0, V13.0.88"
   },
   "exllamav3": {
     "repo": "https://github.com/turboderp-org/exllamav3",
     "rev": "0c49587a7c235e6303a6bbedc8b665272ad3a2ea",
     "version": "1.4.4",
     "patch": "patches/patch_exl3_ext_aarch64.py (adapted from MiaAI-Lab 688b7ab61d549f0f6450981b1f1afbda16c5142f, MIT)",
-    "build_command": "pip wheel . --no-deps -w /wheels (in-container, aarch64)",
-    "artifact": "exllamav3-1.4.4-cp312-cp312-linux_aarch64.whl",
-    "artifact_sha256": "unrecorded (wheel not retained outside the node build container)",
-    "artifact_note": "Rebuild locally with the documented command to verify; import receipt below is from the built container."
+    "build_command": "pip wheel . --no-deps -w /wheels (in-container, aarch64; extension via setup.py/ninja build)",
+    "artifact": "exllamav3-1.4.4-cp312-cp312-linux_aarch64.whl (wheel not retained outside the node)",
+    "extension_artifact": "build/lib.linux-aarch64-cpython-312/exllamav3_ext.cpython-312-aarch64-linux-gnu.so",
+    "extension_size_bytes": 338784280,
+    "extension_sha256": "90132f3d786f283248cb12fcfb08f368924bdcaf08abbbf6f8dd4e05756da1b9",
+    "artifact_note": "Wheel digest not retained; the compiled extension .so above was measured directly. Rebuild with the documented command to regenerate. Wheel re-packaging attempts on 2026-08-31 were blocked by node-wide memory exhaustion (MemAvailable=0) unrelated to this container."
   },
   "verification": [
     {"command": "python3 -c 'import exllamav3, exllamav3_ext'", "result": "PASS"},

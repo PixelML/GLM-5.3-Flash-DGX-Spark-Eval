@@ -1,0 +1,11 @@
+{
+  "avx2_target.cpp": "d5ce967e924bf5d13f431761f36db27678d13a0e09a1e70871194ec35f9d47ed",
+  "avx2_target.h": "9c8e2e4d553031ce09b1d3da197f00467e9ac850da9d3b35a7cf7bdf0c8cfa30",
+  "avx512_target.cpp": "05391bd1a32afc8a7003b1b453307e7525d2bac8a6924e21008250363e4c0019",
+  "avx512_target.h": "722db7d8dc76e69132d9624da413de6ea6b0ad23fa41793cb53d765a61a084f8",
+  "parallel/all_reduce_cpu_avx2.cpp": "4197091d4881489d6140233c002d6106350b4cf58cb4aff0aaa7ffb4d5dd7686",
+  "parallel/all_reduce_cpu_avx512.cpp": "40f7fc88d4fb583d3cd53a00c89653e1428cb93486555bf9301bd82d3b18c22d",
+  "cpu/moe_mul1.cpp": "47fb2292bac74f967028bf5367945ba180c2a0fb5b236098f8395f4b5f26c103",
+  "cpu/moe_handoff.cu": "464d1124c05905405a43762d7129ba365fc77d92e59d15d577dcf75f28ded056",
+  "parallel/all_reduce_cpu.cu": "e3bf8ed38d016d063de9daff9d12ee1c01a2d1b99456af8de65b4853079bf9e4"
+}

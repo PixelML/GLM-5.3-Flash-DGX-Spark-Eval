@@ -43,17 +43,51 @@ Full license text: LICENSE and THIRD-PARTY-NOTICES.md in this repository.
 import sys
 from pathlib import Path
 
-# sha256 of the two full upstream files at the pinned rev (GitHub blob contents);
-# tests/test_aarch64_patch.py asserts these stay documented so silent upstream
-# drift is detectable.
-PINNED_TARGET_SHA256 = {
-    "cpu/moe_handoff.cu": "a635bb717c5c1fa4ba44d08215cc6b0da8c21faa91499f01bff5308610055acd",
-    "parallel/all_reduce_cpu.cu": "064e7e56206333ef95e42abc2c2cdd55fb564b606ac5155150e8b58755195fe3",
-}
+import hashlib
 
 root = Path(sys.argv[1] if len(sys.argv) > 1 else "third_party/exllamav3/exllamav3/exllamav3_ext")
 root = root.resolve()
 assert root.is_dir(), root
+
+# Fail closed: every file this patch touches must match its exact sha256 preimage
+# at exllamav3 rev 0c49587a7c235e6303a6bbedc8b665272ad3a2ea. Any drift (wrong rev,
+# dirty tree, prior partial patch that altered content) aborts before rewriting.
+PINNED_PREIMAGE_SHA256 = {
+    "avx2_target.cpp": "4ffa7fdba36f9f3d7787e7a8a5f78388e88ce5447c59728019470ca7cb302dd5",
+    "avx2_target.h": "957e8343952d97437c94a9b6e4a5368122a78c6c876980988965c5212473fa96",
+    "avx512_target.cpp": "4f9b51075f769c34884e2b1510328b814b71fa0bb71fb0fdd92b72ebc9ba447a",
+    "avx512_target.h": "fa43f1957011b77d5f7b67732817ab5916aa3d6d375c6389f4ef26680e3887d4",
+    "parallel/all_reduce_cpu_avx2.cpp": "a6c184ad5a35b7d16ba77461576ae9b70a4539160887f0e675207e7ae13dccec",
+    "parallel/all_reduce_cpu_avx512.cpp": "9f02819e86f4617356e9dd282e877b0ba24afb87fc10fe1601adc8e8d092cc6a",
+    "cpu/moe_mul1.cpp": "da4f6a50da619af4b055d57f900733f404f669abdc71c0d95b2b9ecaae32a24e",
+    "cpu/moe_handoff.cu": "a635bb717c5c1fa4ba44d08215cc6b0da8c21faa91499f01bff5308610055acd",
+    "parallel/all_reduce_cpu.cu": "064e7e56206333ef95e42abc2c2cdd55fb564b606ac5155150e8b58755195fe3",
+}
+
+for rel, expected in PINNED_PREIMAGE_SHA256.items():
+    p = root / rel
+    if not p.is_file():
+        print(f"ERROR: expected pinned source missing: {rel}", file=sys.stderr)
+        sys.exit(2)
+    actual = hashlib.sha256(p.read_bytes()).hexdigest()
+    # idempotency: already-patched content is accepted too (hash of the exact
+    # bytes this script writes for that file, computed after first apply)
+    import json as _json
+    _postfile = Path(__file__).with_name("patched_postimages.json")
+    _post = _json.loads(_postfile.read_text()) if _postfile.is_file() else {}
+    post = _post.get(rel)
+    if post is None:
+        print(f"ERROR: patched_postimages.json missing entry for {rel}", file=sys.stderr)
+        sys.exit(4)
+    if actual not in (expected, post):
+        print(
+            f"ERROR: {rel} does not match the pinned upstream preimage.\n"
+            f"       expected sha256 {expected}\n"
+            f"       found    sha256 {actual}\n"
+            f"       Refusing to patch a drifted or unexpected source tree.",
+            file=sys.stderr,
+        )
+        sys.exit(3)
 
 # --- avx2_target / avx512_target ------------------------------------------------------
 (root / "avx2_target.cpp").write_text(

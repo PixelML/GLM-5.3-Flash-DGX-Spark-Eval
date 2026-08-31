@@ -124,6 +124,31 @@ def test_config_qbench_rev_matches_pins():
     assert cfg["estimate_minutes"] == [60, 180]
 
 
+def test_config_model_pins_match_manifest():
+    pins = load_json(REPO_ROOT / "manifests" / "runtime-pins.json")
+    cfg = load_json(REPO_ROOT / "configs" / "first_decisive_run.json")
+
+    ref, cand = cfg["reference"], cfg["candidate"]
+    assert ref["hf_id"] == pins["reference_model"]["hf_id"], (
+        "config reference hf_id must equal pins.reference_model.hf_id"
+    )
+    assert ref["revision"] == pins["reference_model"]["rev"], (
+        "config reference revision must equal pins.reference_model.rev"
+    )
+    assert cand["hf_id"] == pins["candidate_model"]["hf_id"], (
+        "config candidate hf_id must equal pins.candidate_model.hf_id"
+    )
+    assert cand["revision"] == pins["candidate_model"]["rev"], (
+        "config candidate revision must equal pins.candidate_model.rev"
+    )
+
+    template_sha = pins["reference_model"]["chat_template_jinja_sha256"]
+    assert re.fullmatch(r"[0-9a-f]{64}", template_sha), (
+        "pins.reference_model.chat_template_jinja_sha256 must be 64 lowercase hex chars, "
+        f"got {template_sha!r}"
+    )
+
+
 def test_exactly_four_fidelity_rows_cover_four_domains():
     rows_paths = fidelity_rows()
     assert len(rows_paths) == 4, f"expected exactly 4 fidelity rows, found {len(rows_paths)}"

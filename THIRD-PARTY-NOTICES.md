@@ -7,7 +7,7 @@ following notices identify the exact sources and licenses.
 
 - Source: https://github.com/turboderp-org/exllamav3/tree/0c49587a7c235e6303a6bbedc8b665272ad3a2ea
 - Commit: `0c49587a7c235e6303a6bbedc8b665272ad3a2ea` (v1.4.4)
-- License: MIT, Copyright (c) 2026 turboderp-org
+- License: MIT, Copyright (c) 2025 Turboderp
 - Use: cloned into git-ignored `third_party/exllamav3` by `bootstrap.sh` and
   rewritten in-place on aarch64 by `patches/patch_exl3_ext_aarch64.py` before
   building the extension. Never committed to this repository.
