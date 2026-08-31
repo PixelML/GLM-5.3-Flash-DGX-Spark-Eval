@@ -3,7 +3,7 @@
 # bootstrap.sh — fetch the pinned third-party eval harness (exllamav3) into
 # third_party/. Idempotent: safe to run repeatedly.
 #
-# This script NEVER downloads model weights. Weight fetching is an Apollo-side,
+# This script NEVER downloads model weights. Weight fetching is an node-side,
 # out-of-band step; this repo only ever references checkpoints by env var.
 #
 set -euo pipefail
@@ -17,7 +17,7 @@ EXL3_DIR="third_party/exllamav3"
 
 # ---- disk free check (informational, plus a weight-download guard) ----------------
 disk_free_gb() {
-  # GNU df; this script targets Linux nodes (agent-sandbox / Apollo), not macOS.
+  # GNU df; this script targets Linux nodes (Linux nodes), not macOS.
   df -BG --output=avail "${1:-.}" | tail -n 1 | tr -dc '0-9'
 }
 free_gb="$(disk_free_gb .)"
@@ -56,8 +56,8 @@ echo "Bootstrap complete. exllamav3 is at $(git -C "$EXL3_DIR" rev-parse HEAD)."
 echo
 echo "Next steps:"
 echo "  1. python3 -m pytest tests/ -q                 # offline integrity checks"
-echo "  2. Copy this repo to Apollo (code+configs only; NEVER weights via this shared tree)."
-echo "  3. On Apollo:"
+echo "  2. Copy this repo to the node (code+configs only; NEVER weights via this shared tree)."
+echo "  3. On the DGX Spark node:"
 echo "       DRY_RUN=1 ./scripts/run_fidelity_smoke.sh   # preview the qbench command"
 echo "       BASE_MODEL_DIR=/path/to/zai-org/GLM-5.3-Flash \\"
 echo "       QUANT_MODEL_DIR=/path/to/LibertAIDAI/GLM-5.3-Flash-NVFP4 \\"

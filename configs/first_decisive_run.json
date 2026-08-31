@@ -16,7 +16,7 @@
       "streaming": true,
       "trust_remote_code": true
     },
-    "note": "Streamed BF16 source reference. Local checkpoint path is supplied on Apollo via BASE_MODEL_DIR."
+    "note": "Streamed BF16 source reference. Local checkpoint path is supplied on the DGX Spark node via BASE_MODEL_DIR."
   },
   "candidate": {
     "label": "NVFP4 candidate",
