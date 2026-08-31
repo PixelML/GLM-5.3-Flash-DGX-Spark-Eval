@@ -1,7 +1,7 @@
 {
   "receipt_type": "arm64 exllamav3 extension build + import smoke",
   "date_utc": "2026-08-31",
-  "producing_repo_rev": "PENDING_UNTIL_COMMIT_A",
+  "producing_repo_rev": "7c881c1575c5f7f3711d1db28db721d8c0d86b49",
   "status": "PASS (build + import); full qbench run not yet executed",
   "host_class": "DGX Spark node, aarch64 (GB10)",
   "runtime": {
