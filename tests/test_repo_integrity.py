@@ -78,8 +78,8 @@ def test_runtime_pins_structure():
     assert pins["exllamav3"]["rev"]
     assert pins["glm_simple_evals"]["rev"]
     for key in ("torch", "cuda"):
-        assert pins[key]["version"] is None
-        assert pins[key]["status"] == "resolve_on_node"
+        assert pins[key]["version"], f"{key} version must now be measured, not null"
+        assert pins[key]["status"] == "verified_on_node"
 
 
 def test_model_revision_pins_present_and_full_length():

@@ -20,13 +20,13 @@
     "rev": "11d73216cd636238e82e1d77fe1042ffab36e7fa",
     "role": "candidate NVFP4 checkpoint"
   },
-  "python": "3.12",
+  "python": "3.12.3",
   "torch": {
-    "version": null,
-    "status": "resolve_on_node"
+    "version": "2.13.0+cu130",
+    "status": "verified_on_node"
   },
   "cuda": {
-    "version": null,
-    "status": "resolve_on_node"
+    "version": "13.0",
+    "status": "verified_on_node"
   }
 }
