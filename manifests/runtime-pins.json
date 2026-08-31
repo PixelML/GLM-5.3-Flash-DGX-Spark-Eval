@@ -10,13 +10,23 @@
     "rev": "b67cb0bf655f8e08c19b1811a1d3c51e3bfea096",
     "role": "capability evals. LATER PHASE - not cloned by bootstrap.sh in phase 0."
   },
+  "reference_model": {
+    "hf_id": "zai-org/GLM-5.3-Flash",
+    "rev": "84c6a6aa9497188e15a635ba793b0f95a79b1033",
+    "role": "reference checkpoint (FP8 e4m3 dynamic; bf16 compute via streaming dequant). Verified byte-identical to rev 04c4e9e95c5da8862dced7e5056455116f83a7e0 by shard count, total bytes, and config quantization_config."
+  },
+  "candidate_model": {
+    "hf_id": "LibertAIDAI/GLM-5.3-Flash-NVFP4",
+    "rev": "11d73216cd636238e82e1d77fe1042ffab36e7fa",
+    "role": "candidate NVFP4 checkpoint"
+  },
   "python": "3.12",
   "torch": {
     "version": null,
-    "status": "resolve_on_apollo"
+    "status": "resolve_on_node"
   },
   "cuda": {
     "version": null,
-    "status": "resolve_on_apollo"
+    "status": "resolve_on_node"
   }
 }

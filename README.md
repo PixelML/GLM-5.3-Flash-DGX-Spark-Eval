@@ -7,7 +7,8 @@ original-model intelligence while keeping usable speed, context, and stability?
 - **Validation model:** Qwen3.8-Flash-Next (later phase)
 - **First experiment:** the current NVFP4 routed-expert checkpoint
   (`LibertAIDAI/GLM-5.3-Flash-NVFP4`, ~97% of params NVFP4 routed experts, rest BF16)
-  vs a streamed BF16 reference (`zai-org/GLM-5.3-Flash`), measured with the **upstream,
+  vs the official streamed FP8 (e4m3 dynamic) reference (`zai-org/GLM-5.3-Flash`, rev
+  `84c6a6aa…`, byte-identical to `04c4e9e9…`), measured with the **upstream,
   unmodified** exllamav3 `qbench` harness.
 
 No benchmark numbers here are real yet. This repo is Phase 0 scaffolding: the configs,
@@ -106,8 +107,8 @@ Verified project-file keys (read from `eval/qbench.py`, `eval/qbench/data.py`,
    runtime via an OpenAI-compatible `chat/completions` endpoint, then tokenizes them with
    the reference tokenizer's chat template into a valid `test_trace` before invoking
    `qbench.py` unchanged. `qbench.py` itself is never patched or forked. W4A4 activation
-   noise affects trace selection only, not the KLD reference — the reference is streamed
-   BF16.
+   noise affects trace selection only, not the KLD reference — the reference is the
+   official FP8 (e4m3 dynamic) checkpoint streamed with bf16 compute.
 2. **Model bytes are derived, not emitted.** qbench reports `vram_gb` (and `bpw_layer` /
    `bpw_head`); the schema's `model_bytes` is `vram_gb * 2^30`. `ppl_delta` is likewise
    derived (candidate ppl / reference ppl). Both are documented in

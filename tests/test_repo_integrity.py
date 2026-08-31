@@ -79,7 +79,17 @@ def test_runtime_pins_structure():
     assert pins["glm_simple_evals"]["rev"]
     for key in ("torch", "cuda"):
         assert pins[key]["version"] is None
-        assert pins[key]["status"] == "resolve_on_apollo"
+        assert pins[key]["status"] == "resolve_on_node"
+
+
+def test_model_revision_pins_present_and_full_length():
+    pins = load_json(REPO_ROOT / "manifests" / "runtime-pins.json")
+    for key in ("reference_model", "candidate_model"):
+        entry = pins[key]
+        assert entry["hf_id"], f"{key} missing hf_id"
+        assert re.fullmatch(r"[0-9a-f]{40}", entry["rev"]), (
+            f"{key} rev must be a full 40-char commit SHA, got {entry['rev']!r}"
+        )
 
 
 def test_manifests_match_readme_pinned_revs():
