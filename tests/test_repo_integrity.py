@@ -74,7 +74,7 @@ def test_json_files_parse(path):
 
 def test_runtime_pins_structure():
     pins = load_json(REPO_ROOT / "manifests" / "runtime-pins.json")
-    assert pins["python"] == "3.12"
+    assert pins["python"] == "3.12.3"
     assert pins["exllamav3"]["rev"]
     assert pins["glm_simple_evals"]["rev"]
     for key in ("torch", "cuda"):
